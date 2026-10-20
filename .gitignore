@@ -1,0 +1,18 @@
+# Python and local development files
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Downloaded MovieTweetings files and optional OMDb enrichment.
+# movies.dat is intentionally kept in the repository as the small catalogue file.
+data/raw/*.dat
+!data/raw/movies.dat
+data/raw/omdb.json
+
+# Spark creates these locally during a pipeline run.
+results/spark/
+
+# OS/editor files
+.DS_Store
+.vscode/

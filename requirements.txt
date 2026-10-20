@@ -1,0 +1,3 @@
+# Local/Codespaces runtime dependency for the Spark implementation.
+# Java 17+ is required by current PySpark releases.
+pyspark==4.0.1

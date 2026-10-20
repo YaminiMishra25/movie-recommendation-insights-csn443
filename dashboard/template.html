@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Movie Recommendation Insights · Big Data Analytics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1f;--muted:#6b6b72;--line:#e3e1da;--acc:#d6452b;--acc2:#2b6cd6;--ok:#1f8a5b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121214;--card:#1c1c20;--ink:#f0eee9;--muted:#9a9aa3;--line:#2e2e35;--acc:#ff6b4f;--acc2:#6aa2ff;--ok:#4cc38a}}
+:root[data-theme="dark"]{--bg:#121214;--card:#1c1c20;--ink:#f0eee9;--muted:#9a9aa3;--line:#2e2e35;--acc:#ff6b4f;--acc2:#6aa2ff;--ok:#4cc38a}
+*{box-sizing:border-box}html{scroll-padding-top:70px}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:28px 20px 8px;max-width:1180px;margin:auto}h1{font:700 clamp(24px,4vw,38px)/1.15 Georgia,serif;margin:0 0 6px}.sub{color:var(--muted);max-width:760px}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap}
+nav div{max-width:1180px;margin:auto;padding:8px 20px;display:flex;gap:6px}nav a{color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px}nav a:hover{background:var(--card);color:var(--ink)}
+main{max-width:1180px;margin:auto;padding:0 20px 60px}section{margin-top:34px}h2{font:700 22px Georgia,serif;margin:0 0 4px}.note{color:var(--muted);font-size:13px;margin:0 0 14px}
+.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:18px}.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}.kpi b{display:block;font-size:26px;letter-spacing:-.5px}.kpi span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.chart{position:relative;height:340px}.tall{height:440px}
+.ctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}input,select,button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}button{cursor:pointer}button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.tw{overflow-x:auto;max-height:420px;overflow-y:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}th{position:sticky;top:0;background:var(--card);cursor:pointer;color:var(--muted);font-size:12px;text-transform:uppercase}td.r,th.r{text-align:right}
+.tag{display:inline-block;font-size:11px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:1px 8px;margin-right:3px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}.flow div{flex:1 1 130px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg);font-size:13px}.flow b{display:block;color:var(--acc)}.flow i{align-self:center;color:var(--muted);font-style:normal}
+.badge{display:inline-block;background:var(--ok);color:#fff;border-radius:99px;padding:2px 10px;font-size:12px}.ins li{margin:5px 0}
+</style></head><body>
+<header><div style="color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.08em">CSN443 · BIG DATA ANALYTICS · PROJECT 7</div>
+<h1>Movie Recommendation Insights</h1>
+<p class="sub">Most-rated movies, highest-rated genres, active users and genre preferences, computed with Hadoop Streaming MapReduce and cross-checked with Apache Spark over real IMDb ratings (MovieTweetings dataset).</p>
+<button id="theme" style="margin-top:6px">Toggle theme</button></header>
+<nav><div><a href="#overview">Overview</a><a href="#movies">Most rated</a><a href="#top">Highest rated</a><a href="#genres">Genres</a><a href="#users">Active users</a><a href="#pref">Preferences</a><a href="#trend">Trend</a><a href="#pipe">Pipeline</a></div></nav>
+<main>
+<section id="overview"><div class="grid kpis" id="kpis"></div>
+<div class="card ins" style="margin-top:14px"><b>Key findings</b><ul id="insights" style="margin:6px 0 0;padding-left:18px"></ul></div></section>
+
+<section id="movies"><h2>Most-rated movies</h2><p class="note">Rating volume is a proxy for popularity. Filter by genre, search by title, click a column to sort.</p>
+<div class="grid two"><div class="card"><div class="chart tall"><canvas id="cMovies"></canvas></div></div>
+<div class="card"><div class="ctl"><input id="q" placeholder="Search title…" style="flex:1;min-width:120px"><select id="gf"></select></div><div class="tw"><table id="tm"></table></div></div></div></section>
+
+<section id="top"><h2>Highest-rated movies</h2><p class="note">Ranked by an IMDb-style weighted rating (prior weight 100, minimum 200 ratings) so tiny samples can’t dominate.</p>
+<div class="card tw"><table id="tt"></table></div></section>
+
+<section id="genres"><h2>Highest-rated genres</h2><p class="note">Raise the minimum rating count to drop genres with too few ratings to be meaningful.</p>
+<div class="card"><div class="ctl"><button data-m="avg" class="on">Average rating</button><button data-m="n">Volume</button>
+<label>Min ratings <input id="minn" type="range" min="0" max="20000" step="500" value="1000"> <span id="minv">1,000</span></label></div><div class="chart tall"><canvas id="cGenre"></canvas></div></div></section>
+
+<section id="users"><h2>Most active users</h2><p class="note">Top 25 raters by number of ratings, with their mean score and favourite genre.</p>
+<div class="grid two"><div class="card"><div class="chart tall"><canvas id="cUsers"></canvas></div></div><div class="card tw" style="max-height:480px"><table id="tu"></table></div></div></section>
+
+<section id="pref"><h2>Genre-wise preferences</h2><p class="note">Pick a genre to compare how users score it against all films, and see which genres heavy users (20+ ratings) favour most.</p>
+<div class="grid two"><div class="card"><div class="ctl"><select id="gsel"></select><span id="likes" class="tag"></span></div><div class="chart"><canvas id="cHist"></canvas></div></div>
+<div class="card"><b>Favourite genre of heavy users</b><div class="chart"><canvas id="cFav"></canvas></div></div></div></section>
+
+<section id="trend"><h2>Rating activity over time</h2><p class="note">Monthly rating volume (bars) and mean score (line), months with 200+ ratings.</p><div class="card"><div class="chart"><canvas id="cTrend"></canvas></div></div></section>
+
+<section id="pipe"><h2>Pipeline &amp; performance</h2><p class="note">Architecture and a like-for-like comparison of the two engines on the same six aggregations.</p>
+<div class="card"><div class="flow"><div><b>Ingest</b>Scraper pulls IMDb-sourced ratings; optional OMDb enrichment</div><i>→</i><div><b>HDFS</b>ratings, movies stored as blocks</div><i>→</i><div><b>MapReduce</b>6 streaming jobs, combiner, map-side join</div><i>→</i><div><b>Spark / Hive</b>DataFrame + HiveQL versions</div><i>→</i><div><b>Serve</b>JSON feeds this dashboard</div></div></div>
+<div class="grid two" style="margin-top:14px"><div class="card"><div class="chart" style="height:240px"><canvas id="cBench"></canvas></div></div><div class="card" id="benchtxt"></div></div></section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const D=/*DATA*/null;const $=s=>document.querySelector(s),f=n=>n.toLocaleString("en-IN");let charts={};
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function mk(id,cfg){try{charts[id]&&charts[id].destroy();Chart.defaults.color=css("--muted");Chart.defaults.borderColor=css("--line");charts[id]=new Chart($("#"+id),cfg)}catch(e){console.warn(e)}}
+const bar=(labels,data,color,extra={})=>({type:"bar",data:{labels,datasets:[{data,backgroundColor:color,borderRadius:4}]},options:{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false}},...extra}});
+const K=D.kpi;$("#kpis").innerHTML=[["Ratings",f(K.ratings)],["Users",f(K.users)],["Movies rated",f(K.movies)],["Mean rating",K.avg+" / 10"],["Heavy users (20+)",f(K.heavy)]].map(([l,v])=>`<div class="card kpi"><b>${v}</b><span>${l}</span></div>`).join("");
+const big=D.genres.filter(g=>g.n>=20000),bestG=big[0],worstG=big[big.length-1],topN=D.movies[0],sus=D.top_rated.find(m=>m.avg>9.9);
+const dramaShare=Math.round(100*(D.fav.Drama||0)/K.heavy);
+$("#insights").innerHTML=[`<b>${topN.title}</b> is the most-rated movie (${f(topN.n)} ratings, mean ${topN.avg}).`,
+`Among genres with 20k+ ratings, <b>${bestG.genre}</b> scores highest (${bestG.avg}) and <b>${worstG.genre}</b> lowest (${worstG.avg}).`,
+`<b>${dramaShare}%</b> of heavy users have Drama as their most-rated genre, so volume and rating can point to different genres.`,
+`The top user rated ${f(D.users[0].n)} films; the top 25 raters account for ${(100*D.users.reduce((a,u)=>a+u.n,0)/K.ratings).toFixed(1)}% of all ratings.`,
+sus?`Data-quality flag: <b>${sus.title}</b> averages ${sus.avg} over ${sus.n} ratings, which looks like coordinated or bot-like rating. A real pipeline would filter it.`:""].filter(Boolean).map(t=>`<li>${t}</li>`).join("");
+
+// most rated
+const allG=[...new Set(D.movies.flatMap(m=>m.genres))].sort();$("#gf").innerHTML=`<option value="">All genres</option>`+allG.map(g=>`<option>${g}</option>`).join("");
+let sortK="n",sortD=-1;
+function rows(list,target,cols){$(target).innerHTML=`<thead><tr>${cols.map(c=>`<th class="${c[2]||""}" data-k="${c[0]}">${c[1]}</th>`).join("")}</tr></thead><tbody>${list.map((m,i)=>`<tr><td class="r">${i+1}</td>${cols.map(c=>c[3]?`<td class="${c[2]||""}">${c[3](m)}</td>`:"").join("")}</tr>`).join("")}</tbody>`}
+function drawMovies(){const q=$("#q").value.toLowerCase(),g=$("#gf").value;
+let l=D.movies.filter(m=>m.title.toLowerCase().includes(q)&&(!g||m.genres.includes(g))).sort((a,b)=>sortD*(a[sortK]>b[sortK]?1:-1));
+$("#tm").innerHTML=`<thead><tr><th class="r">#</th><th data-k="title">Title</th><th class="r" data-k="n">Ratings</th><th class="r" data-k="avg">Avg</th><th>Genres</th></tr></thead><tbody>${l.slice(0,100).map((m,i)=>`<tr><td class="r">${i+1}</td><td>${m.title}</td><td class="r">${f(m.n)}</td><td class="r">${m.avg}</td><td>${m.genres.slice(0,3).map(x=>`<span class="tag">${x}</span>`).join("")}</td></tr>`).join("")}</tbody>`;
+$("#tm").querySelectorAll("th[data-k]").forEach(h=>h.onclick=()=>{sortD=sortK===h.dataset.k?-sortD:-1;sortK=h.dataset.k;drawMovies()});
+const t=l.slice(0,15);mk("cMovies",bar(t.map(m=>m.title),t.map(m=>m.n),css("--acc"),{scales:{x:{title:{display:true,text:"Number of ratings"}},y:{ticks:{font:{size:11}}}}}))}
+$("#q").oninput=drawMovies;$("#gf").onchange=drawMovies;
+$("#tt").innerHTML=`<thead><tr><th class="r">#</th><th>Title</th><th class="r">Weighted</th><th class="r">Avg</th><th class="r">Ratings</th></tr></thead><tbody>${D.top_rated.map((m,i)=>`<tr><td class="r">${i+1}</td><td>${m.title}</td><td class="r"><b>${m.wr}</b></td><td class="r">${m.avg}</td><td class="r">${f(m.n)}</td></tr>`).join("")}</tbody>`;
+// genres
+let gm="avg";function drawGenres(){const min=+$("#minn").value;$("#minv").textContent=f(min);const l=D.genres.filter(g=>g.n>=min).sort((a,b)=>b[gm]-a[gm]);
+mk("cGenre",bar(l.map(g=>g.genre),l.map(g=>g[gm]),css("--acc2"),{scales:{x:{min:gm==="avg"?6:0,title:{display:true,text:gm==="avg"?"Mean rating (0–10)":"Number of ratings"}}}}))}
+document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{gm=b.dataset.m;document.querySelectorAll("[data-m]").forEach(x=>x.classList.toggle("on",x===b));drawGenres()});$("#minn").oninput=drawGenres;
+// users
+$("#tu").innerHTML=`<thead><tr><th class="r">#</th><th>User</th><th class="r">Ratings</th><th class="r">Avg</th><th>Favourite</th></tr></thead><tbody>${D.users.map((u,i)=>`<tr><td class="r">${i+1}</td><td>${u.id}</td><td class="r">${f(u.n)}</td><td class="r">${u.avg}</td><td><span class="tag">${u.fav}</span></td></tr>`).join("")}</tbody>`;
+// prefs
+const gs=Object.keys(D.hist).filter(g=>D.hist[g].reduce((a,b)=>a+b)>=1000).sort();$("#gsel").innerHTML=gs.map(g=>`<option ${g==="Horror"?"selected":""}>${g}</option>`).join("");
+const tot=D.hist[gs[0]].map((_,i)=>gs.reduce((a,g)=>a+D.hist[g][i],0));
+function drawPref(){const g=$("#gsel").value,h=D.hist[g],s=h.reduce((a,b)=>a+b),T=tot.reduce((a,b)=>a+b);
+$("#likes").textContent=`${(100*h.slice(8).reduce((a,b)=>a+b)/s).toFixed(0)}% rate it 8+ (all genres: ${(100*tot.slice(8).reduce((a,b)=>a+b)/T).toFixed(0)}%)`;
+mk("cHist",{type:"bar",data:{labels:h.map((_,i)=>i),datasets:[{label:g,data:h.map(v=>+(100*v/s).toFixed(1)),backgroundColor:css("--acc")},{label:"All genres",data:tot.map(v=>+(100*v/T).toFixed(1)),backgroundColor:css("--line")}]},options:{maintainAspectRatio:false,scales:{y:{title:{display:true,text:"% of ratings"}},x:{title:{display:true,text:"Rating"}}}}})}
+$("#gsel").onchange=drawPref;
+function drawFav(){const e=Object.entries(D.fav).sort((a,b)=>b[1]-a[1]),t=e.slice(0,8),o=e.slice(8).reduce((a,b)=>a+b[1],0),p=["#d6452b","#2b6cd6","#1f8a5b","#e0a526","#8a4fd6","#17a3b8","#e0568f","#7a7a7a","#b0b0b0"];
+mk("cFav",{type:"doughnut",data:{labels:[...t.map(x=>x[0]),"Other"],datasets:[{data:[...t.map(x=>x[1]),o],backgroundColor:p,borderColor:css("--card")}]},options:{maintainAspectRatio:false,plugins:{legend:{position:"right"}}}})}
+// trend
+function drawTrend(){const m=D.months;mk("cTrend",{data:{labels:m.map(x=>x.m),datasets:[{type:"bar",label:"Ratings",data:m.map(x=>x.n),backgroundColor:css("--acc2"),yAxisID:"y"},{type:"line",label:"Mean rating",data:m.map(x=>x.avg),borderColor:css("--acc"),pointRadius:0,yAxisID:"y2"}]},options:{maintainAspectRatio:false,scales:{y:{title:{display:true,text:"Ratings"}},y2:{position:"right",min:6,max:8.5,grid:{drawOnChartArea:false}},x:{ticks:{maxTicksLimit:10}}}}})}
+// bench
+function drawBench(){const b=D.bench;mk("cBench",bar(["Hadoop Streaming MapReduce (local sim)","Apache Spark (local[*])"],[b.mr,b.spark],[css("--acc"),css("--acc2")],{scales:{x:{title:{display:true,text:"Seconds, all 6 jobs"}}}}));
+$("#benchtxt").innerHTML=`<b>Result check</b> <span class="badge">${b.match?"All "+b.jobs+" job outputs identical":"Mismatch"}</span><p>Both engines were run on one machine over ${f(K.ratings)} ratings. Spark runs all jobs in one JVM session with a broadcast join. The MapReduce simulation re-reads the file and sorts for every job, which is what a cluster’s shuffle does at scale.</p><p class="note">These timings come from a single node, so they show correctness and relative cost here, not cluster speedup. On a real cluster, the combiner and map-side join cut shuffle traffic.</p>`}
+function all(){drawMovies();drawGenres();drawPref();drawFav();drawTrend();drawBench();charts.cUsers||0;const u=D.users.slice(0,15);mk("cUsers",bar(u.map(x=>"User "+x.id),u.map(x=>x.n),css("--ok"),{scales:{x:{title:{display:true,text:"Ratings given"}}}}))}
+all();$("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#121214";r.dataset.theme=d?"light":"dark";all()};
+matchMedia("(prefers-color-scheme:dark)").onchange=all;
+</script></body></html>
